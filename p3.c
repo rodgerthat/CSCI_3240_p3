@@ -2,8 +2,8 @@
 // CSCI_3240
 // p3
 // Dr. Butler
-// A C program that uses the socketsArrayetpair system call to create
-// a pair of socketsArrayets, and uses the fork system call to create
+// A C program that uses the socketpair system call to create
+// a pair of sockets, and uses the fork system call to create
 // a child heavy-weight process.
 
 
@@ -38,8 +38,8 @@ int main( )  {
 
             if(msgArray[0] !='\0')
             {
-                write(socketsArray[0],msgArray,100);
-                read(socketsArray[0],msgArray,100);
+                write(socketsArray[0], msgArray, 100);
+                read(socketsArray[0], msgArray, 100);
                 // get length of msg
                 // msg is just a string, an array of chars
                 // lol this gets the length of the msgArray array 
@@ -66,19 +66,19 @@ int main( )  {
         close(socketsArray[0]);
 
         // wait for the child
-        rc = waitpid(rc,&status,0);
-        printf("%d %d\n",rc,status);
+        rc = waitpid(rc,&status, 0);
+        printf("%d %d\n", rc, status);
     }
     else
     {
         //close the other end of the socket
-        close(socketsArray[0]);
-        while(x=read(socketsArray[1],msgArray,100))
+        close( socketsArray[0] );
+        while(x=read(socketsArray[1], msgArray, 100))
         {
             int i;
-            for(i=0;i<sizeof(msgArray);i++)
+            for(i=0; i<sizeof(msgArray); ++i)
                     msgArray[i] = tolower(msgArray[i]);
-            write(socketsArray[1],msgArray,100);
+            write(socketsArray[1], msgArray, 100);
 
         }
         //read(socketsArray[1],msgArray,100); // read the msgArray
