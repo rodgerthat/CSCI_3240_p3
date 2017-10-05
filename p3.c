@@ -2,8 +2,8 @@
 // CSCI_3240
 // p3
 // Dr. Butler
-// A C program that uses the socketpair system call to create
-// a pair of sockets, and uses the fork system call to create
+// A C program that uses the socketsArrayetpair system call to create
+// a pair of socketsArrayets, and uses the fork system call to create
 // a child heavy-weight process.
 
 
@@ -17,66 +17,84 @@
 
 int main( )  {
 
-        int x,rc, status, sock[2];
+    int x, rc, status, socketsArray[2];
 
-        char buf[100];  // character buffer, 
-        // call the socketpair system function
-        socketpair(AF_UNIX,SOCK_STREAM,0,sock);
-        rc = fork();
+    char msgArray[100];  // character msgArrayfer, 
 
-        //printf("Before the if/else stuff");
-        if (rc > 0) // parent process
+    // call the socketpair system function
+    socketpair(AF_UNIX, SOCK_STREAM, 0, socketsArray);
+    rc = fork();    // fork the process. 
+
+    if (rc > 0) // parent process
+    {
+        // close the end of the socketsArray inorder to write to the child
+        close(socketsArray[1]);
+
+        // loop to read in file and send to child
+        while(fgets(msgArray,100,stdin))
         {
-                // close the end of the sock inorder to write to the child
-                close(sock[1]);
+        
+            int length = 0;
 
-                //printf("before the while loop");
-                // loop to read in file and send to child
-                while(fgets(buf,100,stdin))
-                {
-                        if(buf[0] !='\0')
-                        {
-                                write(sock[0],buf,100);
-                                read(sock[0],buf,100);
-                                printf("%d: recvd %s\n", getpid(), buf);
-                        }
-                        //read(sock[0],buf,100);
-                        //printf("%d: recvd %s\n",getpid(),buf);
-                        else
-                                break;
+            if(msgArray[0] !='\0')
+            {
+                write(socketsArray[0],msgArray,100);
+                read(socketsArray[0],msgArray,100);
+                // get length of msg
+                // msg is just a string, an array of chars
+                // lol this gets the length of the msgArray array 
+                // which we already know. neat trick tho. 
+                //int length = sizeof(msgArray) / sizeof(msgArray[0]);
+                // print msg
+                int i;
+                for (i=0; i<(sizeof(msgArray)/sizeof(msgArray[0])); ++i) {
+                    if (msgArray[i] != '\0') {
+                        ++length;
+                    } else {
+                        break;
+                    }
                 }
-                close(sock[0]);
-
-                // wait for the child
-                rc = waitpid(rc,&status,0);
-                printf("%d %d\n",rc,status);
+                
+                printf("%d: recvd len %d msg: %s:\n", getpid(), (length-1), msgArray);
+            }
+            else {
+                break;
+            }
+            //read(socketsArray[0],msgArray,100);
+            //printf("%d: recvd %s\n",getpid(),msgArray);
         }
-        else
+        close(socketsArray[0]);
+
+        // wait for the child
+        rc = waitpid(rc,&status,0);
+        printf("%d %d\n",rc,status);
+    }
+    else
+    {
+        //close the other end of the socket
+        close(socketsArray[0]);
+        while(x=read(socketsArray[1],msgArray,100))
         {
-                //close the other end of the socket
-                close(sock[0]);
-                while(x=read(sock[1],buf,100))
-                {
-                        int i;
-                        for(i=0;i<sizeof(buf);i++)
-                                buf[i] = tolower(buf[i]);
-                        write(sock[1],buf,100);
+            int i;
+            for(i=0;i<sizeof(msgArray);i++)
+                    msgArray[i] = tolower(msgArray[i]);
+            write(socketsArray[1],msgArray,100);
 
-                }
-                //read(sock[1],buf,100); // read the buf
+        }
+        //read(socketsArray[1],msgArray,100); // read the msgArray
 
-                // convert what is in the buffer to lowercase
-                //int i;
-                //for(i=0;i<sizeof(buf);i++)
+        // convert what is in the msgArrayfer to lowercase
+        //int i;
+        //for(i=0;i<sizeof(msgArray);i++)
         //      {
-                //      buf[i] = tolower(buf[i]);
+                //      msgArray[i] = tolower(msgArray[i]);
         //      }
-                // :)
-                //write(sock[1],buf,100);
-                buf[0] = '\0';
-                //rc = read(sock[1],buf,100);
-                //printf("%d: recvd rc %d  buf %s\n",getpid(),rc,buf);
-                close(sock[1]);
-                exit(0);
-        }
+        // :)
+        //write(socketsArray[1],msgArray,100);
+        msgArray[0] = '\0';
+        //rc = read(socketsArray[1],msgArray,100);
+        //printf("%d: recvd rc %d  msgArray %s\n",getpid(),rc,msgArray);
+        close(socketsArray[1]);
+        exit(0);
+    }
 }
