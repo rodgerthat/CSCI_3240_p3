@@ -17,7 +17,7 @@ main()
         read(sock[0],buf,4);
         buf[4] = '\0';  //   just for debugging
         printf("LEN %s\n",buf);
-	rc = wait(&status);
+        rc = wait(&status);
         printf("status of child %d\n",status);
     }
     else

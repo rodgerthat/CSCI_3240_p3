@@ -15,86 +15,36 @@
 #include <sys/socket.h>
 
 
-int main( )  {
+int main( int argc, char **argv )  {
 
-    int x, rc, status, socketsArray[2];
+    pid_t pid;
+    int rc, status, sock[2], n;
+    char msg[100];
+    char response[8];
+    socketpair( AF_UNIX, SOCK_STREAM, 0, sock);
+    printf( "fds= %d %d\n", sock[0], sock[1] );
+    pid = fork();
 
-    char msgArray[100];  // character msgArrayfer, 
-
-    // call the socketpair system function
-    socketpair(AF_UNIX, SOCK_STREAM, 0, socketsArray);
-    rc = fork();    // fork the process. 
-
-    if (rc > 0) // parent process
-    {
-        // close the end of the socketsArray inorder to write to the child
-        close(socketsArray[1]);
-
-        // loop to read in file and send to child
-        while(fgets(msgArray,100,stdin))
-        {
+    if ( pid > 0 ) {
         
-            int length = 0;
+        close( sock[1] );
 
-            if(msgArray[0] !='\0')
-            {
-                write(socketsArray[0], msgArray, 100);
-                read(socketsArray[0], msgArray, 100);
-                // get length of msg
-                // msg is just a string, an array of chars
-                // lol this gets the length of the msgArray array 
-                // which we already know. neat trick tho. 
-                //int length = sizeof(msgArray) / sizeof(msgArray[0]);
-                // print msg
-                int i;
-                for (i=0; i<(sizeof(msgArray)/sizeof(msgArray[0])); ++i) {
-                    if (msgArray[i] != '\0') {
-                        ++length;
-                    } else {
-                        break;
-                    }
-                }
-                
-                printf("%d: recvd len %d msg: %s:\n", getpid(), (length-1), msgArray);
-            }
-            else {
-                break;
-            }
-            //read(socketsArray[0],msgArray,100);
-            //printf("%d: recvd %s\n",getpid(),msgArray);
+        while( read( sock[0], msg, 4 ) ) {
+
+            msg[4] = '\0';
+            n = atoi( msg );
+            read( sock[0], msg, n);
+            sprintf( response, "ack %c %c", msg[0], msg[n-1] );
+            write( sock[0], response, 6 );
+            msg[n] = '\0';
+            printf( "CLIENT rcvd len %d msg :%s: ", n, msg );
         }
-        close(socketsArray[0]);
+        wait(&status);
+    } else {
+        close( sock[0] );
+        server( sock[1] );
 
-        // wait for the child
-        rc = waitpid(rc,&status, 0);
-        printf("%d %d\n", rc, status);
     }
-    else
-    {
-        //close the other end of the socket
-        close( socketsArray[0] );
-        while(x=read(socketsArray[1], msgArray, 100))
-        {
-            int i;
-            for(i=0; i<sizeof(msgArray); ++i)
-                    msgArray[i] = tolower(msgArray[i]);
-            write(socketsArray[1], msgArray, 100);
+        
 
-        }
-        //read(socketsArray[1],msgArray,100); // read the msgArray
-
-        // convert what is in the msgArrayfer to lowercase
-        //int i;
-        //for(i=0;i<sizeof(msgArray);i++)
-        //      {
-                //      msgArray[i] = tolower(msgArray[i]);
-        //      }
-        // :)
-        //write(socketsArray[1],msgArray,100);
-        msgArray[0] = '\0';
-        //rc = read(socketsArray[1],msgArray,100);
-        //printf("%d: recvd rc %d  msgArray %s\n",getpid(),rc,msgArray);
-        close(socketsArray[1]);
-        exit(0);
-    }
 }
